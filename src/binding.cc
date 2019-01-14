@@ -25,17 +25,60 @@ using v8::Private;
 using v8::String;
 using v8::Value;
 
-char *call(void *handle, const char *method, const char *payload)
+void lib_call(const FunctionCallbackInfo<Value> &args)
 {
-    char *error;
-    void *ptr = dlsym(handle, method);
-    if ((error = dlerror()) != NULL)
+    Isolate *isolate = args.GetIsolate();
+    void *handle = Local<External>::Cast(args.This()->GetInternalField(0))->Value();
+    if (handle == nullptr)
     {
-        fputs(error, stderr);
-        exit(1);
+        isolate->ThrowException(Exception::Error(
+            String::NewFromUtf8(isolate,
+                                "Shared library is closed",
+                                NewStringType::kNormal)
+                .ToLocalChecked()));
+        return;
+    }
+
+    if (args.Length() != 2)
+    {
+        isolate->ThrowException(Exception::TypeError(
+            String::NewFromUtf8(isolate,
+                                "Wrong number of arguments",
+                                NewStringType::kNormal)
+                .ToLocalChecked()));
+        return;
+    }
+
+    if (!args[0]->IsString() && !args[1]->IsString())
+    {
+        isolate->ThrowException(Exception::TypeError(
+            String::NewFromUtf8(isolate,
+                                "Wrong arguments",
+                                NewStringType::kNormal)
+                .ToLocalChecked()));
+        return;
+    }
+
+    String::Utf8Value method(isolate, args[0]);
+    void *ptr = dlsym(handle, *method);
+    if (!ptr)
+    {
+        isolate->ThrowException(Exception::Error(
+            String::NewFromUtf8(isolate,
+                                dlerror(),
+                                NewStringType::kNormal)
+                .ToLocalChecked()));
+        return;
     }
     GoFunc func = (GoFunc)ptr;
-    return func(payload);
+
+    String::Utf8Value payload(isolate, args[1]);
+    char *r = func(*payload);
+    Local<String> result = String::NewFromUtf8(isolate,
+                                                   r,
+                                                   NewStringType::kNormal).ToLocalChecked();
+    free(r);
+    args.GetReturnValue().Set(result);
 }
 
 void lib_close(const FunctionCallbackInfo<Value> &args)
@@ -108,6 +151,11 @@ void openlib(const FunctionCallbackInfo<Value> &args)
     Local<Function> func = funcTemplate->GetFunction();
     func->SetName(String::NewFromUtf8(isolate, "close"));
     lib->Set(v8::String::NewFromUtf8(isolate, "close"), func);
+
+    funcTemplate = FunctionTemplate::New(isolate, lib_call);
+    func = funcTemplate->GetFunction();
+    func->SetName(String::NewFromUtf8(isolate, "call"));
+    lib->Set(v8::String::NewFromUtf8(isolate, "call"), func);
 
     args.GetReturnValue().Set(lib);
 }
