@@ -1,0 +1,14 @@
+{
+  "name": "ngo",
+  "version": "1.0.0",
+  "description": "minimum golang and node js binding library",
+  "main": "index.js",
+  "scripts": {
+    "build": "node-gyp configure build"
+  },
+  "author": "Ciel",
+  "license": "ISC",
+  "devDependencies": {
+    "node-gyp": "^3.8.0"
+  }
+}
