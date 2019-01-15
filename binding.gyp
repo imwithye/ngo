@@ -1,8 +1,8 @@
 {
   "targets": [
     {
-      "target_name": "ngo",
-      "sources": [ "src/ngo.cc" ]
+      "target_name": "nopher",
+      "sources": [ "src/nopher.cc" ]
     }
   ]
 }

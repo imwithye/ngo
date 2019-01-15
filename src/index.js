@@ -1,1 +1,1 @@
-module.exports = require('../build/Release/ngo.node')
+module.exports = require('../build/Release/nopher.node')
