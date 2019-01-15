@@ -83,7 +83,7 @@ void lib_invoke(const FunctionCallbackInfo<Value> &args)
     auto context = Context::New(isolate);
     auto registry = Local<Object>::Cast(args.This()->Get(context, String::NewFromUtf8(isolate, "registry")).ToLocalChecked());
     auto func = (GoFunc)(Local<External>::Cast(registry->Get(args[0]->ToString()))->Value());
-    auto payload = ToCString(isolate, args[0]->ToString());
+    auto payload = ToCString(isolate, args[1]->ToString());
     auto r = func(payload);
     args.GetReturnValue().Set(String::NewFromUtf8(isolate, r));
 }
