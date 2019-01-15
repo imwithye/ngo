@@ -24,6 +24,7 @@ using v8::String;
 using v8::Value;
 
 typedef void (*NodeFunc)(const FunctionCallbackInfo<Value> &);
+typedef char *(*GoFunc)(const char *);
 typedef char *(*REGISTERFUNC)();
 
 void ThrowError(Isolate *isolate, const char *msg)
@@ -70,17 +71,34 @@ const char *ToCString(Isolate *isolate, Local<String> str)
     return *value;
 }
 
+void lib_invoke(const FunctionCallbackInfo<Value> &args)
+{
+    Isolate *isolate = args.GetIsolate();
+    if (args.Length() != 2 || !args[0]->IsString() || !args[1]->IsString())
+    {
+        ThrowTypeError(isolate, "Wrong arguments");
+        return;
+    }
+
+    auto context = Context::New(isolate);
+    auto registry = Local<Object>::Cast(args.This()->Get(context, String::NewFromUtf8(isolate, "registry")).ToLocalChecked());
+    auto func = (GoFunc)(Local<External>::Cast(registry->Get(args[0]->ToString()))->Value());
+    auto payload = ToCString(isolate, args[0]->ToString());
+    auto r = func(payload);
+    args.GetReturnValue().Set(String::NewFromUtf8(isolate, r));
+}
+
 void lib_close(const FunctionCallbackInfo<Value> &args)
 {
-    auto *isolate = args.GetIsolate();
-    auto *handle = Local<External>::Cast(args.This()->GetInternalField(0))->Value();
+    auto isolate = args.GetIsolate();
+    auto handle = Local<External>::Cast(args.This()->GetInternalField(0))->Value();
     CloseSharedLibrary(handle);
     args.This()->SetInternalField(0, External::New(isolate, nullptr));
 }
 
 void openlib(const FunctionCallbackInfo<Value> &args)
 {
-    Isolate *isolate = args.GetIsolate();
+    auto isolate = args.GetIsolate();
     if (args.Length() != 1 || !args[0]->IsString())
     {
         ThrowTypeError(isolate, "Wrong arguments");
@@ -100,6 +118,7 @@ void openlib(const FunctionCallbackInfo<Value> &args)
     auto lib = libTemplate->NewInstance(context).ToLocalChecked();
     lib->SetInternalField(0, External::New(isolate, handle));
     SetFunction(isolate, lib, "close", lib_close);
+    SetFunction(isolate, lib, "invoke", lib_invoke);
 
     auto registry = Object::New(isolate);
     auto REGISTER = (REGISTERFUNC)LoadFunction(handle, "REGISTER");

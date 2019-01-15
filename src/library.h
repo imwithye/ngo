@@ -1,5 +1,5 @@
-#ifndef LIBRARY_H_
-#define LIBRARY_H_
+#ifndef _LIBRARY_H_
+#define _LIBRARY_H_
 
 #ifdef _WIN32
 #include <windows.h>
@@ -16,7 +16,7 @@ void *LoadSharedLibrary(const char *path)
 #endif
     if (!handle)
     {
-        return NULL;
+        return nullptr;
     }
     return handle;
 }
@@ -40,7 +40,7 @@ void *LoadFunction(void *handle, const char *name)
 {
     if (!handle)
     {
-        return NULL;
+        return nullptr;
     }
 #if _WIN32
     void *func = (void *)GetProcAddress((HINSTANCE)handle, (LPCSTR)name);
@@ -49,7 +49,7 @@ void *LoadFunction(void *handle, const char *name)
 #endif
     if (!func)
     {
-        return NULL;
+        return nullptr;
     }
     return func;
 }
