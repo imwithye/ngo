@@ -1,5 +1,5 @@
 {
-  "name": "ngo",
+  "name": "nopher",
   "version": "1.0.0",
   "description": "minimum golang and node js binding library",
   "main": "index.js",
@@ -9,7 +9,7 @@
   "author": "Ciel",
   "repository": {
     "type": "git",
-    "url": "https://github.com/imwithye/ngo.git"
+    "url": "https://github.com/imwithye/nopher.git"
   },
   "license": "MIT",
   "devDependencies": {

@@ -1,4 +1,4 @@
-ngo
+nopher
 
 ```Go
 go build -o example\example.so -buildmode=c-shared example\example.go
