@@ -7,7 +7,11 @@
     "build": "node-gyp configure build"
   },
   "author": "Ciel",
-  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/imwithye/ngo.git"
+  },
+  "license": "MIT",
   "devDependencies": {
     "node-gyp": "^3.8.0"
   }
