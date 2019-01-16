@@ -113,3 +113,5 @@ typings/
 *.app
 
 build/
+.vscode/
+example/example.h

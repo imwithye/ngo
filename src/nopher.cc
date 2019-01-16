@@ -44,14 +44,6 @@ void ThrowTypeError(Isolate *isolate, const char *msg)
             .ToLocalChecked()));
 }
 
-void SetFunction(Isolate *isolate, Local<Object> obj, const char *name, NodeFunc func)
-{
-    auto funcTemplate = FunctionTemplate::New(isolate, func);
-    auto function = funcTemplate->GetFunction();
-    function->SetName(String::NewFromUtf8(isolate, name));
-    obj->Set(String::NewFromUtf8(isolate, name), function);
-}
-
 vector<string> SplitString(string str, char delimeter)
 {
     stringstream ss(str);
@@ -70,7 +62,7 @@ const char *ToCString(Isolate *isolate, Local<String> str)
     return *value;
 }
 
-void lib_invoke(const FunctionCallbackInfo<Value> &args)
+void lib_invoke(const Nan::FunctionCallbackInfo<v8::Value> &args)
 {
     Isolate *isolate = args.GetIsolate();
     if (args.Length() != 2 || !args[0]->IsString() || !args[1]->IsString())
@@ -87,7 +79,7 @@ void lib_invoke(const FunctionCallbackInfo<Value> &args)
     args.GetReturnValue().Set(String::NewFromUtf8(isolate, r));
 }
 
-void lib_close(const FunctionCallbackInfo<Value> &args)
+void lib_close(const Nan::FunctionCallbackInfo<v8::Value> &args)
 {
     auto isolate = args.GetIsolate();
     auto handle = Local<External>::Cast(args.This()->GetInternalField(0))->Value();
@@ -95,7 +87,7 @@ void lib_close(const FunctionCallbackInfo<Value> &args)
     args.This()->SetInternalField(0, External::New(isolate, nullptr));
 }
 
-void openlib(const FunctionCallbackInfo<Value> &args)
+void openlib(const Nan::FunctionCallbackInfo<v8::Value> &args)
 {
     auto isolate = args.GetIsolate();
     if (args.Length() != 1 || !args[0]->IsString())
@@ -116,8 +108,8 @@ void openlib(const FunctionCallbackInfo<Value> &args)
     libTemplate->SetInternalFieldCount(1);
     auto lib = libTemplate->NewInstance(context).ToLocalChecked();
     lib->SetInternalField(0, External::New(isolate, handle));
-    SetFunction(isolate, lib, "close", lib_close);
-    SetFunction(isolate, lib, "invoke", lib_invoke);
+    lib->Set(Nan::New("close").ToLocalChecked(), Nan::New<v8::FunctionTemplate>(lib_close)->GetFunction());
+    lib->Set(Nan::New("invoke").ToLocalChecked(), Nan::New<v8::FunctionTemplate>(lib_invoke)->GetFunction());
 
     auto registry = Object::New(isolate);
     auto REGISTER = (REGISTERFUNC)LoadFunction(handle, "REGISTER");
@@ -133,9 +125,9 @@ void openlib(const FunctionCallbackInfo<Value> &args)
     args.GetReturnValue().Set(lib);
 }
 
-void Initialize(Local<Object> exports)
+void Initialize(Local<Object> exports, Local<Object> module)
 {
-    NODE_SET_METHOD(exports, "openlib", openlib);
+    Nan::SetMethod(exports, "openlib", openlib);
 }
 
 NODE_MODULE(NODE_GYP_MODULE_NAME, Initialize)
