@@ -1,15 +1,11 @@
 #ifndef _LIBRARY_H_
 #define _LIBRARY_H_
 
-#ifdef _WIN32
-#include <windows.h>
-#else
-#include <dlfcn.h>
-#endif
+#include <nan.h>
 
 void *LoadSharedLibrary(const char *path)
 {
-#if _WIN32
+#ifdef _WIN32
     void *handle = (void *)LoadLibraryA(path);
 #else
     void *handle = (void *)dlopen(path, RTLD_LAZY);
@@ -23,7 +19,7 @@ void *LoadSharedLibrary(const char *path)
 
 void CloseSharedLibrary(void *handle)
 {
-#if _WIN32
+#ifdef _WIN32
     if (!handle)
     {
         FreeLibrary((HINSTANCE)handle);
@@ -42,7 +38,7 @@ void *LoadFunction(void *handle, const char *name)
     {
         return nullptr;
     }
-#if _WIN32
+#ifdef _WIN32
     void *func = (void *)GetProcAddress((HINSTANCE)handle, (LPCSTR)name);
 #else
     void *func = (void *)dlsym(handle, *name);

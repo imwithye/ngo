@@ -1,11 +1,10 @@
-#include "library.h"
+#include "library.hpp"
 
 #include <stdio.h>
 #include <string>
 #include <sstream>
 #include <iostream>
 #include <vector>
-#include <node.h>
 
 namespace ngo
 {
