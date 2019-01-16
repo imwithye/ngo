@@ -3,16 +3,14 @@
   "version": "1.0.0",
   "description": "minimum golang and node js binding library",
   "main": "index.js",
-  "scripts": {
-    "build": "node-gyp configure build"
-  },
+  "gypfile": true,
   "author": "Ciel",
   "repository": {
     "type": "git",
     "url": "https://github.com/imwithye/nopher.git"
   },
   "license": "MIT",
-  "devDependencies": {
-    "node-gyp": "^3.8.0"
+  "dependencies": {
+    "nan": "^2.12.1"
   }
 }
