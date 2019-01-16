@@ -42,7 +42,32 @@ Then compile Go package into C shared library.
 go build -o example/example.so -buildmode=c-shared example/example.go
 ```
 
-Nopher will expose three APIs to 
-```Bash
-node example/example.js
+Nopher will expose `openlib` API to NodeJS,
+
+```JavaScript
+const nopher = require('nopher')
+
+const lib = nopher.openlib('example/example.so')
+
+// close library
+lib.close()
+
+// invoke go function
+lib.invoke('ToLower', 'HELLO WORLD')
+
+// all available functions
+lib.registry
 ```
+
+Currently nopher only supports taking one string argument from NodeJS and returning a string. JSON string can be used for more than one argument.
+
+For example,
+
+```JavaScript
+GetLocalizedString(locale, str) {
+	const { val, err } = JSON.parse(lib.invoke('GetLocalizedString', JSON.stringify({ locale, str })))
+	return val
+}
+```
+
+A wrapper function can be used to support multiple arguments.
