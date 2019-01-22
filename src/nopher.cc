@@ -73,8 +73,8 @@ void lib_invoke(const Nan::FunctionCallbackInfo<v8::Value> &args)
 
     auto context = Context::New(isolate);
     auto registry = Local<Object>::Cast(args.This()->Get(context, String::NewFromUtf8(isolate, "registry")).ToLocalChecked());
-    auto func = (GoFunc)(Local<External>::Cast(registry->Get(args[0]->ToString()))->Value());
-    auto payload = ToCString(isolate, args[1]->ToString());
+    auto func = (GoFunc)(Local<External>::Cast(registry->Get(Local<String>::Cast(args[0])))->Value());
+    auto payload = ToCString(isolate, Local<String>::Cast(args[1]));
     auto r = func(payload);
     args.GetReturnValue().Set(String::NewFromUtf8(isolate, r));
 }
@@ -96,7 +96,7 @@ void openlib(const Nan::FunctionCallbackInfo<v8::Value> &args)
         return;
     }
 
-    auto handle = LoadSharedLibrary(ToCString(isolate, args[0]->ToString()));
+    auto handle = LoadSharedLibrary(ToCString(isolate, Local<String>::Cast(args[0])));
     if (!handle)
     {
         ThrowError(isolate, "Could not load the shared library");
