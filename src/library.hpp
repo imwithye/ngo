@@ -3,9 +3,13 @@
 
 #include <nan.h>
 
+#if !defined(_WIN32)
+#include <dlfcn.h>
+#endif
+
 void *LoadSharedLibrary(const char *path)
 {
-#ifdef _WIN32
+#if _WIN32
     void *handle = (void *)LoadLibraryA(path);
 #else
     void *handle = (void *)dlopen(path, RTLD_LAZY);
@@ -19,7 +23,7 @@ void *LoadSharedLibrary(const char *path)
 
 void CloseSharedLibrary(void *handle)
 {
-#ifdef _WIN32
+#if _WIN32
     if (!handle)
     {
         FreeLibrary((HINSTANCE)handle);
@@ -38,10 +42,10 @@ void *LoadFunction(void *handle, const char *name)
     {
         return nullptr;
     }
-#ifdef _WIN32
+#if _WIN32
     void *func = (void *)GetProcAddress((HINSTANCE)handle, (LPCSTR)name);
 #else
-    void *func = (void *)dlsym(handle, *name);
+    void *func = (void *)dlsym(handle, name);
 #endif
     if (!func)
     {
