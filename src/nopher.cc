@@ -15,6 +15,7 @@ using v8::External;
 using v8::FunctionCallbackInfo;
 using v8::FunctionTemplate;
 using v8::Isolate;
+using v8::JSON;
 using v8::Local;
 using v8::NewStringType;
 using v8 ::Null;
@@ -64,8 +65,15 @@ const Local<String> ToString(Local<Value> value)
 
 const char *ToCString(Isolate *isolate, Local<Value> value)
 {
-    String::Utf8Value str(isolate, ToString(value));
-    return *str;
+    if (value->IsString())
+    {
+        String::Utf8Value str(isolate, ToString(value));
+        return *str;
+    }
+    else
+    {
+        return nullptr;
+    }
 }
 
 const Local<External> ToExternal(Local<Value> value)
@@ -75,8 +83,8 @@ const Local<External> ToExternal(Local<Value> value)
 
 void lib_invoke(const Nan::FunctionCallbackInfo<v8::Value> &args)
 {
-    Isolate *isolate = args.GetIsolate();
-    if (args.Length() != 2 || !args[0]->IsString() || !args[1]->IsString())
+    auto isolate = args.GetIsolate();
+    if (args.Length() < 1 || !args[0]->IsString())
     {
         ThrowTypeError(isolate, "Wrong arguments");
         return;
