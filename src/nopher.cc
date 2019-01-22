@@ -17,6 +17,7 @@ using v8::FunctionTemplate;
 using v8::Isolate;
 using v8::Local;
 using v8::NewStringType;
+using v8 ::Null;
 using v8::Object;
 using v8::ObjectTemplate;
 using v8::String;
@@ -56,10 +57,20 @@ vector<string> SplitString(string str, char delimeter)
     return result;
 }
 
-const char *ToCString(Isolate *isolate, Local<String> str)
+const Local<String> ToString(Local<Value> value)
 {
-    String::Utf8Value value(isolate, str);
-    return *value;
+    return Local<String>::Cast(value);
+}
+
+const char *ToCString(Isolate *isolate, Local<Value> value)
+{
+    String::Utf8Value str(isolate, ToString(value));
+    return *str;
+}
+
+const Local<External> ToExternal(Local<Value> value)
+{
+    return Local<External>::Cast(value);
 }
 
 void lib_invoke(const Nan::FunctionCallbackInfo<v8::Value> &args)
@@ -73,16 +84,23 @@ void lib_invoke(const Nan::FunctionCallbackInfo<v8::Value> &args)
 
     auto context = Context::New(isolate);
     auto registry = Local<Object>::Cast(args.This()->Get(context, String::NewFromUtf8(isolate, "registry")).ToLocalChecked());
-    auto func = (GoFunc)(Local<External>::Cast(registry->Get(Local<String>::Cast(args[0])))->Value());
-    auto payload = ToCString(isolate, Local<String>::Cast(args[1]));
+    auto func = (GoFunc)ToExternal(registry->Get(ToString(args[0])))->Value();
+    auto payload = ToCString(isolate, args[1]);
     auto r = func(payload);
-    args.GetReturnValue().Set(String::NewFromUtf8(isolate, r));
+    if (r == nullptr)
+    {
+        args.GetReturnValue().Set(Null(isolate));
+    }
+    else
+    {
+        args.GetReturnValue().Set(String::NewFromUtf8(isolate, r));
+    }
 }
 
 void lib_close(const Nan::FunctionCallbackInfo<v8::Value> &args)
 {
     auto isolate = args.GetIsolate();
-    auto handle = Local<External>::Cast(args.This()->GetInternalField(0))->Value();
+    auto handle = ToExternal(args.This()->GetInternalField(0))->Value();
     CloseSharedLibrary(handle);
     args.This()->SetInternalField(0, External::New(isolate, nullptr));
 }
@@ -96,7 +114,7 @@ void openlib(const Nan::FunctionCallbackInfo<v8::Value> &args)
         return;
     }
 
-    auto handle = LoadSharedLibrary(ToCString(isolate, Local<String>::Cast(args[0])));
+    auto handle = LoadSharedLibrary(ToCString(isolate, args[0]));
     if (!handle)
     {
         ThrowError(isolate, "Could not load the shared library");
