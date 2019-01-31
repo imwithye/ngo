@@ -75,7 +75,7 @@ string ToCString(Isolate *isolate, Local<Value> value)
     }
     else
     {
-        return nullptr;
+        return "";
     }
 }
 
@@ -96,8 +96,8 @@ void lib_invoke(const Nan::FunctionCallbackInfo<v8::Value> &args)
     auto context = Context::New(isolate);
     auto registry = Local<Object>::Cast(args.This()->Get(context, String::NewFromUtf8(isolate, "registry")).ToLocalChecked());
     auto func = (GoFunc)ToExternal(registry->Get(ToString(args[0])))->Value();
-    auto payload = ToCString(isolate, args[1]).c_str();
-    auto r = func(payload);
+    auto payload = ToCString(isolate, args[1]);
+    auto r = func(payload.length() == 0 ? nullptr : payload.c_str());
     if (r == nullptr)
     {
         args.GetReturnValue().Set(Null(isolate));
