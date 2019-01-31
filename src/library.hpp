@@ -24,12 +24,12 @@ void *LoadSharedLibrary(const char *path)
 void CloseSharedLibrary(void *handle)
 {
 #if _WIN32
-    if (!handle)
+    if (handle)
     {
         FreeLibrary((HINSTANCE)handle);
     }
 #else
-    if (!handle)
+    if (handle)
     {
         dlclose(handle);
     }
