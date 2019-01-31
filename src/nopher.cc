@@ -63,16 +63,19 @@ const Local<String> ToString(Local<Value> value)
     return Local<String>::Cast(value);
 }
 
-const char *ToCString(Isolate *isolate, Local<Value> value)
+string ToCString(Isolate *isolate, Local<Value> value)
 {
     if (value->IsString())
     {
-        String::Utf8Value str(isolate, ToString(value));
-        return *str;
+        auto stringVal = ToString(value);
+        auto length = stringVal->Utf8Length(isolate);
+        vector<char> utf8Data(length + 2);
+        stringVal->WriteUtf8(isolate, utf8Data.data(), length);
+        return string(utf8Data.data());
     }
     else
     {
-        return nullptr;
+        return "";
     }
 }
 
@@ -94,7 +97,7 @@ void lib_invoke(const Nan::FunctionCallbackInfo<v8::Value> &args)
     auto registry = Local<Object>::Cast(args.This()->Get(context, String::NewFromUtf8(isolate, "registry")).ToLocalChecked());
     auto func = (GoFunc)ToExternal(registry->Get(ToString(args[0])))->Value();
     auto payload = ToCString(isolate, args[1]);
-    auto r = func(payload);
+    auto r = func(payload.length() == 0 ? nullptr : payload.c_str());
     if (r == nullptr)
     {
         args.GetReturnValue().Set(Null(isolate));
@@ -122,7 +125,7 @@ void openlib(const Nan::FunctionCallbackInfo<v8::Value> &args)
         return;
     }
 
-    auto handle = LoadSharedLibrary(ToCString(isolate, args[0]));
+    auto handle = LoadSharedLibrary(ToCString(isolate, args[0]).c_str());
     if (!handle)
     {
         ThrowError(isolate, "Could not load the shared library");
